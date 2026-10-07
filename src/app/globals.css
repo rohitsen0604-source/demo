@@ -2,15 +2,16 @@
 
 @layer base {
   :root {
-    --background: #faf9f6;
-    --foreground: #0f172a;
+    --background: #faf8f5;
+    --foreground: #09090b;
     --card: #ffffff;
-    --card-foreground: #0f172a;
-    --primary: #0f172a;
+    --card-foreground: #09090b;
+    --primary: #09090b;
     --primary-foreground: #ffffff;
-    --accent: #3b82f6;
     --accent-gold: #d97706;
-    --border: #e2e8f0;
+    --accent-bronze: #92400e;
+    --accent-emerald: #059669;
+    --border: #e7e2d9;
   }
 
   body {
@@ -21,23 +22,29 @@
   }
 }
 
-/* Custom card shadow & subtle prestige borders */
+/* Luxury Obsidian & Champagne Gold Card System */
 .mahto-card {
   background-color: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 1rem;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-  transition: all 0.2s ease-in-out;
+  border: 1px solid rgba(24, 24, 27, 0.08);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 20px -2px rgba(9, 9, 11, 0.03), 0 2px 6px -1px rgba(9, 9, 11, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .mahto-card:hover {
-  border-color: rgba(15, 23, 42, 0.16);
-  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08);
+  border-color: rgba(217, 119, 6, 0.35);
+  box-shadow: 0 12px 32px -4px rgba(217, 119, 6, 0.08), 0 4px 12px -2px rgba(9, 9, 11, 0.04);
+}
+
+.mahto-card-dark {
+  background: linear-gradient(135deg, #09090b 0%, #18181b 100%);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  color: #ffffff;
 }
 
 .mahto-card-gold {
   background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
-  border: 1px solid rgba(217, 119, 6, 0.25);
+  border: 1px solid rgba(217, 119, 6, 0.28);
 }
 
 .mahto-badge {
@@ -46,7 +53,7 @@
   padding: 0.25rem 0.65rem;
   border-radius: 9999px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.02em;
 }
 
@@ -59,9 +66,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d4cfc5;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #b5ad9e;
 }
