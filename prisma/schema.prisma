@@ -1,0 +1,509 @@
+// MAHTO.ORG — Complete Production Prisma Schema for PostgreSQL
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  FOUNDER
+  PROFESSOR
+  COLLEGE_ADMIN
+  INVESTOR
+  MENTOR
+  MEDIA_PARTNER
+  MEDIA_OPERATOR
+  TELECALLER
+  MAHTO_MANAGER
+  SUPER_ADMIN
+}
+
+enum FounderType {
+  STUDENT
+  GRADUATE
+}
+
+enum RecognitionLevel {
+  MAHTO_FOUNDER
+  MAHTO_ASSESSED_FOUNDER
+  MAHTO_VALIDATED_FOUNDER
+  MAHTO_SELECTED_FOUNDER
+  MAHTO_BACKED_FOUNDER
+}
+
+enum StartupStage {
+  IDEA
+  PROBLEM_VALIDATED
+  MVP_PROTOTYPE
+  EARLY_TRACTION
+  REVENUE
+  GROWTH
+  FUNDRAISING
+  SCALE
+}
+
+enum StartupFounderStatus {
+  ACTIVE
+  FORMER_FOUNDER
+  EXITED
+  ACQUIRED
+  MERGED
+  CLOSED
+  DORMANT
+  REMOVED
+  DISPUTED
+}
+
+enum HealthStatus {
+  HEALTHY
+  WATCH
+  INTERVENTION_REQUIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+// -------------------------------------------------------------
+// USER & IDENTITY SYSTEM (Universal Single Account)
+// -------------------------------------------------------------
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  phone           String?        @unique
+  passwordHash    String
+  name            String
+  avatarUrl       String?
+  roles           UserRole[]
+  status          String         @default("ACTIVE") // ACTIVE, SUSPENDED, PENDING
+  kycRecord       KycRecord?
+  founderProfile  FounderProfile?
+  professor       Professor?
+  collegeAdmin    CollegeAdmin?
+  investor        Investor?
+  mentor          Mentor?
+  employee        Employee?
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  role      Role
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, role])
+}
+
+model KycRecord {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  panNumberMask String?
+  aadhaarMask   String?
+  status        String    @default("PENDING") // PENDING, VERIFIED, REJECTED
+  verifiedAt    DateTime?
+  referenceId   String?
+  createdAt     DateTime  @default(now())
+}
+
+// -------------------------------------------------------------
+// FOUNDER & FOUNDER PASSPORT
+// -------------------------------------------------------------
+model FounderProfile {
+  id               String            @id @default(uuid())
+  userId           String            @unique
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  founderIdCode    String            @unique // e.g. MHT-F-2027-0042
+  founderType      FounderType       @default(STUDENT)
+  recognition      RecognitionLevel  @default(MAHTO_FOUNDER)
+  bio              String?
+  city             String?
+  country          String            @default("India")
+  
+  // Education & Campus Link
+  school           String?
+  university       String?
+  degree           String?
+  graduationYear   Int?
+  isStudentVerified Boolean          @default(false)
+  collegeId        String?
+  college          College?          @relation(fields: [collegeId], references: [id])
+  
+  // Relations
+  founderCard      FounderCard?
+  founderScores    FounderScoreHistory[]
+  assessments      FounderAssessment[]
+  submissions      ChallengeSubmission[]
+  startups         StartupFounder[]
+  journalEntries   FounderJournal[]
+  references       ProfessorReference[]
+
+  // Public Visibility Settings
+  isPublicProfile  Boolean           @default(true)
+  showScorePublic  Boolean           @default(false)
+  showStartupPublic Boolean          @default(true)
+
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model FounderCard {
+  id             String         @id @default(uuid())
+  founderId      String         @unique
+  founder        FounderProfile @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  cardQrCode     String         @unique // UUID for public verification URL
+  issueDate      DateTime       @default(now())
+  isActive       Boolean        @default(true)
+  physicalStatus String         @default("DIGITAL_ONLY") // DIGITAL_ONLY, PRINTING, SHIPPED, DELIVERED
+}
+
+model FounderScoreHistory {
+  id                    String         @id @default(uuid())
+  founderId             String
+  founder               FounderProfile @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  overallScore          Float          // e.g. 78.5 / 100
+  version               String         // e.g. "v1.2"
+  
+  // 12 Dimensions (/100 total)
+  vision                Float          // max 8
+  problemUnderstanding   Float          // max 8
+  customerUnderstanding  Float          // max 8
+  criticalThinking      Float          // max 8
+  execution             Float          // max 10
+  sales                 Float          // max 8
+  leadership            Float          // max 8
+  financialThinking     Float          // max 7
+  resilience            Float          // max 8
+  communication         Float          // max 7
+  learningAbility       Float          // max 8
+  resourcefulness       Float          // max 10
+
+  // Evidence Weightings
+  psychometricWeight    Float          @default(0.15)
+  cognitiveWeight       Float          @default(0.15)
+  simulationsWeight     Float          @default(0.25)
+  executionWeight       Float          @default(0.25)
+  facultyPeerWeight     Float          @default(0.10)
+  startupEvidenceWeight Float          @default(0.10)
+
+  reason                String?
+  assessorId            String?
+  createdAt             DateTime       @default(now())
+}
+
+// -------------------------------------------------------------
+// MULTI-STARTUP & CO-FOUNDER ARCHITECTURE
+// -------------------------------------------------------------
+model Startup {
+  id               String                 @id @default(uuid())
+  name             String
+  slug             String                 @unique
+  logoUrl          String?
+  tagline          String?
+  description      String?
+  industry         String
+  stage            StartupStage           @default(IDEA)
+  
+  isPaid           Boolean                @default(false)
+  subscriptionTier String                 @default("BASIC") // BASIC, OS_RECURRING (₹100/mo)
+  
+  founders         StartupFounder[]
+  scores           StartupScoreHistory[]
+  monthlyReports   MonthlyStartupReport[]
+  fundingRounds    FundingRound[]
+  dataRoomFiles    DataRoomFile[]
+  coFounderInvites CoFounderInvitation[]
+
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+}
+
+model StartupFounder {
+  id               String               @id @default(uuid())
+  startupId        String
+  founderId        String
+  roleTitle        String               // e.g. "Primary Founder", "Co-Founder (CTO)"
+  equityPercentage Float?
+  status           StartupFounderStatus @default(ACTIVE)
+  startDate        DateTime             @default(now())
+  endDate          DateTime?
+  disputeNotes     String?
+  
+  startup          Startup              @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  founder          FounderProfile       @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@unique([startupId, founderId])
+}
+
+model CoFounderInvitation {
+  id             String    @id @default(uuid())
+  startupId      String
+  startup        Startup   @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  invitedName    String
+  invitedEmail   String
+  invitedPhone   String?
+  proposedRole   String
+  proposedEquity Float?
+  message        String?
+  status         String    @default("PENDING") // PENDING, ACCEPTED, DECLINED, EXPIRED
+  token          String    @unique
+  createdAt      DateTime  @default(now())
+}
+
+model StartupScoreHistory {
+  id            String   @id @default(uuid())
+  startupId     String
+  startup       Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  overallScore  Float    // /100
+  marketScore   Float
+  productScore  Float
+  tractionScore Float
+  unitEconomics Float
+  teamScore     Float
+  defensibility Float
+  assessorNotes String?
+  createdAt     DateTime @default(now())
+}
+
+model MonthlyStartupReport {
+  id             String       @id @default(uuid())
+  startupId      String
+  startup        Startup      @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  reportingMonth String       // "2027-03"
+  
+  // Financial
+  revenue        Float        @default(0)
+  mrr            Float        @default(0)
+  burnRate       Float        @default(0)
+  runwayMonths   Float        @default(0)
+  cashBalance    Float        @default(0)
+  
+  // Growth
+  activeCustomers Int         @default(0)
+  newCustomers   Int          @default(0)
+  churnRate      Float        @default(0)
+  cac            Float        @default(0)
+  ltv            Float        @default(0)
+  
+  // Narrative
+  highlights     String
+  lowlights      String
+  helpNeeded     String?
+  
+  // Health
+  healthStatus   HealthStatus @default(HEALTHY)
+  reviewerNotes  String?
+  createdAt      DateTime     @default(now())
+}
+
+// -------------------------------------------------------------
+// ASSESSMENTS & CHALLENGES
+// -------------------------------------------------------------
+model FounderAssessment {
+  id          String         @id @default(uuid())
+  founderId   String
+  founder     FounderProfile @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  dayStage    Int            // 1 to 6
+  title       String
+  isCompleted Boolean        @default(false)
+  unlockedAt  DateTime       @default(now())
+  completedAt DateTime?
+  answers     Json?
+  score       Float?
+}
+
+model ChallengeSubmission {
+  id           String         @id @default(uuid())
+  founderId    String
+  founder      FounderProfile @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  challengeKey String         // e.g. "CO_FOUNDER_PITCH", "CUSTOMER_DISCOVERY_20"
+  videoUrl     String?
+  documentUrl  String?
+  textResponse String?
+  score        Float?
+  feedback     String?
+  status       String         @default("SUBMITTED")
+  createdAt    DateTime       @default(now())
+}
+
+// -------------------------------------------------------------
+// CAMPUS & PROFESSOR NETWORK
+// -------------------------------------------------------------
+model College {
+  id          String           @id @default(uuid())
+  name        String
+  slug        String           @unique
+  city        String
+  state       String
+  status      String           @default("UNVERIFIED")
+  mouSignedAt DateTime?
+  students    FounderProfile[]
+  professors  Professor[]
+  admins      CollegeAdmin[]
+  demandIndex Float            @default(0)
+  createdAt   DateTime         @default(now())
+}
+
+model Professor {
+  id          String               @id @default(uuid())
+  userId      String               @unique
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collegeId   String
+  college     College              @relation(fields: [collegeId], references: [id])
+  department  String
+  designation String
+  references  ProfessorReference[]
+  createdAt   DateTime             @default(now())
+}
+
+model ProfessorReference {
+  id             String         @id @default(uuid())
+  professorId    String
+  professor      Professor      @relation(fields: [professorId], references: [id])
+  founderId      String
+  founder        FounderProfile @relation(fields: [founderId], references: [id])
+  isEnrolled     Boolean
+  courseYear     String
+  wouldInvest10L String         // "YES", "NO", "NEED_MORE_INFO", "GOOD_FOUNDER_WEAK_OPP"
+  facultyNotes   String?
+  verifiedAt     DateTime       @default(now())
+}
+
+model CollegeAdmin {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collegeId String
+  college   College  @relation(fields: [collegeId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// -------------------------------------------------------------
+// INVESTOR & DATA ROOM
+// -------------------------------------------------------------
+model Investor {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firmName      String?
+  thesis        String?
+  sectors       String[]
+  chequeSizeMin Float?
+  chequeSizeMax Float?
+  createdAt     DateTime @default(now())
+}
+
+model FundingRound {
+  id           String   @id @default(uuid())
+  startupId    String
+  startup      Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  roundName    String
+  targetAmount Float
+  raisedAmount Float    @default(0)
+  valuation    Float?
+  status       String   @default("PLANNED")
+  createdAt    DateTime @default(now())
+}
+
+model DataRoomFile {
+  id           String   @id @default(uuid())
+  startupId    String
+  startup      Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileUrl      String
+  category     String   // FINANCIALS, PITCH_DECK, LEGAL, CAP_TABLE
+  isRestricted Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+// -------------------------------------------------------------
+// MENTORS & EMPLOYEES / CRM
+// -------------------------------------------------------------
+model Mentor {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expertise String[]
+  bio       String
+  createdAt DateTime @default(now())
+}
+
+model Employee {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeId     String   @unique
+  department     String
+  baseSalary     Float
+  incentiveDue   Float    @default(0)
+  targetLeads    Int      @default(100)
+  convertedLeads Int      @default(0)
+  createdAt      DateTime @default(now())
+}
+
+// -------------------------------------------------------------
+// COMMERCE, AUDIT & NOTIFICATIONS
+// -------------------------------------------------------------
+model Payment {
+  id          String        @id @default(uuid())
+  userId      String
+  startupId   String?
+  amount      Float
+  currency    String        @default("INR")
+  productType String
+  gatewayTxId String?       @unique
+  status      PaymentStatus @default(PENDING)
+  invoiceUrl  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  actionUrl String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  beforeData Json?
+  afterData  Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}
+
+model FounderJournal {
+  id        String         @id @default(uuid())
+  founderId String
+  founder   FounderProfile @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  tags      String[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
