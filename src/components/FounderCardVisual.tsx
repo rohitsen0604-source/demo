@@ -14,13 +14,13 @@ export default function FounderCardVisual({ founder, startupName = "CampusLogix"
   const [copied, setCopied] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
 
-  const verificationUrl = typeof window !== "undefined" 
-    ? `${window.location.origin}/verify/founder/${founder.cardQrCode}`
-    : `https://mahto.org/verify/founder/${founder.cardQrCode}`;
-
   const copyLink = () => {
+    const url = typeof window !== "undefined"
+      ? `${window.location.origin}/verify/founder/${founder.cardQrCode}`
+      : `https://mahto.org/verify/founder/${founder.cardQrCode}`;
+
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(verificationUrl);
+      navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
