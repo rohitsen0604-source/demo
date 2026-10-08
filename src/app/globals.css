@@ -2,59 +2,178 @@
 
 @layer base {
   :root {
-    --background: #faf8f5;
-    --foreground: #09090b;
-    --card: #ffffff;
-    --card-foreground: #09090b;
-    --primary: #09090b;
-    --primary-foreground: #ffffff;
-    --accent-gold: #d97706;
-    --accent-bronze: #92400e;
-    --accent-emerald: #059669;
-    --border: #e7e2d9;
+    --background: #09090b;
+    --foreground: #fafafa;
+    --card: #121215;
+    --card-foreground: #fafafa;
+    --primary: #f59e0b;
+    --primary-foreground: #09090b;
+    --accent-gold: #f59e0b;
+    --accent-gold-dark: #d97706;
+    --accent-bronze: #b45309;
+    --accent-emerald: #10b981;
+    --accent-ruby: #e11d48;
+    --border: rgba(245, 158, 11, 0.15);
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: #09090b;
+    color: #fafafa;
+    font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display), var(--font-sans), sans-serif;
+    letter-spacing: -0.02em;
   }
 }
 
-/* Luxury Obsidian & Champagne Gold Card System */
+/* Luxury Background Gradients & Meshes */
+.bg-obsidian-radial {
+  background: radial-gradient(circle at 50% 0%, rgba(217, 119, 6, 0.12) 0%, rgba(9, 9, 11, 0.95) 50%, #09090b 100%);
+}
+
+.bg-radial-subtle {
+  background: radial-gradient(circle at 50% 10%, rgba(245, 158, 11, 0.08) 0%, transparent 60%);
+}
+
+.bg-grid-gold {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(245, 158, 11, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(245, 158, 11, 0.04) 1px, transparent 1px);
+}
+
+/* Luxury Card System */
 .mahto-card {
-  background-color: #ffffff;
-  border: 1px solid rgba(24, 24, 27, 0.08);
+  background: #121215;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 1.25rem;
-  box-shadow: 0 4px 20px -2px rgba(9, 9, 11, 0.03), 0 2px 6px -1px rgba(9, 9, 11, 0.02);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .mahto-card:hover {
-  border-color: rgba(217, 119, 6, 0.35);
-  box-shadow: 0 12px 32px -4px rgba(217, 119, 6, 0.08), 0 4px 12px -2px rgba(9, 9, 11, 0.04);
-}
-
-.mahto-card-dark {
-  background: linear-gradient(135deg, #09090b 0%, #18181b 100%);
-  border: 1px solid rgba(217, 119, 6, 0.3);
-  color: #ffffff;
+  border-color: rgba(245, 158, 11, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px -8px rgba(245, 158, 11, 0.12), 0 8px 16px -4px rgba(0, 0, 0, 0.5);
 }
 
 .mahto-card-gold {
-  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
-  border: 1px solid rgba(217, 119, 6, 0.28);
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.95) 0%, rgba(39, 39, 42, 0.85) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 8px 30px rgba(217, 119, 6, 0.1);
 }
 
-.mahto-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
+.mahto-card-gold:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 16px 40px rgba(217, 119, 6, 0.2);
+}
+
+.glass-panel {
+  background: rgba(18, 18, 21, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Gold Text Gradient */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #b45309 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-silver-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #d4d4d8 50%, #71717a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Luxury Button System */
+.btn-gold {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #09090b;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  border-radius: 0.75rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px 0 rgba(217, 119, 6, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gold:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 6px 22px 0 rgba(245, 158, 11, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-obsidian {
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fafafa;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  transition: all 0.25s ease;
+}
+
+.btn-obsidian:hover {
+  background: #27272a;
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+}
+
+/* Badges */
+.badge-gold {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-emerald {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-ruby {
+  background: rgba(225, 29, 72, 0.12);
+  color: #fb7185;
+  border: 1px solid rgba(225, 29, 72, 0.3);
+}
+
+.badge-zinc {
+  background: rgba(255, 255, 255, 0.06);
+  color: #a1a1aa;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Shimmer animations */
+@keyframes goldShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: skewX(-20deg);
+  animation: goldShimmer 3s infinite;
 }
 
 /* Custom Scrollbar */
@@ -63,12 +182,13 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #09090b;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d4cfc5;
+  background: #27272a;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #b5ad9e;
+  background: #d97706;
 }
+
